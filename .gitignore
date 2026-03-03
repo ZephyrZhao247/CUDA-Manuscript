@@ -6,3 +6,7 @@
 *.fatbin
 
 *.out
+
+*.ncu-rep
+
+build
