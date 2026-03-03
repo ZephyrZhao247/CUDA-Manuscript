@@ -31,10 +31,59 @@ __global__ void matmul_kernel(const float* a,
   for (unsigned ph = 0; ph < num_phases; ++ph) {
     // 1. Load tile
     tile_a[ty][tx] = a[row * k + ph * kBlockSize + tx];
-    tile_b[ty][tx] = b[k * (ph * kBlockSize + ty) + col];
+    tile_b[ty][tx] = b[n * (ph * kBlockSize + ty) + col];
     __syncthreads();
 
     // 2. Compute on tile
+    for (unsigned i = 0; i < kBlockSize; ++i) {
+      acc += tile_a[ty][i] * tile_b[i][tx];
+    }
+    __syncthreads();
+  }
+
+  c[row * n + col] = acc;
+}
+
+/*
+  * This version of the kernel adds boundary checks when loading tiles. This is
+  * necessary when m, n, or k is not a multiple of kBlockSize.
+*/
+__global__ void matmul_kernel_checked(const float* a,
+                              const float* b,
+                              float* c,
+                              int m,
+                              int n,
+                              int k) {
+  __shared__ float tile_a[kBlockSize][kBlockSize];
+  __shared__ float tile_b[kBlockSize][kBlockSize];
+
+  int row = blockIdx.y * blockDim.y + threadIdx.y;
+  int col = blockIdx.x * blockDim.x + threadIdx.x;
+  int ty = threadIdx.y;
+  int tx = threadIdx.x;
+
+  if (row >= m || col >= n) {
+    return;
+  }
+
+  float acc = 0.0f;
+  unsigned num_phases = (k + kBlockSize - 1) / kBlockSize;
+  for (unsigned ph = 0; ph < num_phases; ++ph) {
+    // 1. Load tile
+    if (row < m && ph * kBlockSize + tx < k) {
+      tile_a[ty][tx] = a[row * k + ph * kBlockSize + tx];
+    } else {
+      tile_a[ty][tx] = 0.0f;
+    }
+    if (ph * kBlockSize + ty < k && col < n) {
+      tile_b[ty][tx] = b[n * (ph * kBlockSize + ty) + col];
+    } else {
+      tile_b[ty][tx] = 0.0f;
+    }
+    __syncthreads();
+
+    // 2. Compute on tile
+    // ! We don't need checks here because out-of-bound threads will contribute 0 to the final result.
     for (unsigned i = 0; i < kBlockSize; ++i) {
       acc += tile_a[ty][i] * tile_b[i][tx];
     }
