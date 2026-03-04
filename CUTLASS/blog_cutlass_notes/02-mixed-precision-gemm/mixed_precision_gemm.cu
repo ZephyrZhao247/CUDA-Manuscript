@@ -117,7 +117,7 @@ struct SM90_16x8x32_F32E4M3E5M2F32_TN {
                                    float const &c1,
                                    float const &c2,
                                    float const &c3) {
-#if defined(CUTE_ARCH_MMA_SM89_ENABLED)
+#if defined(CUTE_ARCH_MMA_SM90_ENABLED)
     asm volatile("mma.sync.aligned.m16n8k32.row.col.f32.e4m3.e5m2.f32 "
                  "{%0,  %1,  %2,  %3},"
                  "{%4,  %5,  %6,  %7},"
@@ -126,7 +126,7 @@ struct SM90_16x8x32_F32E4M3E5M2F32_TN {
                  : "=f"(d0), "=f"(d1), "=f"(d2), "=f"(d3)
                  : "r"(a0), "r"(a1), "r"(a2), "r"(a3), "r"(b0), "r"(b1), "f"(c0), "f"(c1), "f"(c2), "f"(c3));
 #else
-    CUTE_INVALID_CONTROL_PATH("Attempting to use SM90_16x8x32_F32E4M3E5M2F32_TN without CUTE_ARCH_MMA_SM89_ENABLED");
+    CUTE_INVALID_CONTROL_PATH("Attempting to use SM90_16x8x32_F32E4M3E5M2F32_TN without CUTE_ARCH_MMA_SM90_ENABLED");
 #endif
   }
 };

@@ -135,6 +135,7 @@ struct KernelSpec {
   static constexpr int kTileN = kTileN_;
   static constexpr int kTileK = kTileK_;
 
+  // Even though this is SM80 atom, it can still run on SM100.
   using MMA_op = SM80_16x8x8_F16F16F16F16_TN;
   using TiledMMA = decltype(make_tiled_mma(MMA_op{}));
 
