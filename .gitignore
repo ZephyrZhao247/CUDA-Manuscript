@@ -10,3 +10,6 @@
 *.ncu-rep
 
 build
+
+*.so
+*.pyd
