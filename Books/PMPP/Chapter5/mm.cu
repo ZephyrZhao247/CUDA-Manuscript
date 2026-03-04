@@ -8,12 +8,8 @@ namespace {
 
 constexpr int kBlockSize = 16;
 
-__global__ void matmul_kernel(const float* a,
-                              const float* b,
-                              float* c,
-                              int m,
-                              int n,
-                              int k) {
+__global__ void matmul_kernel(
+    float const *a, float const *b, float *c, int m, int n, int k) {
   __shared__ float tile_a[kBlockSize][kBlockSize];
   __shared__ float tile_b[kBlockSize][kBlockSize];
 
@@ -48,12 +44,8 @@ __global__ void matmul_kernel(const float* a,
   * This version of the kernel adds boundary checks when loading tiles. This is
   * necessary when m, n, or k is not a multiple of kBlockSize.
 */
-__global__ void matmul_kernel_checked(const float* a,
-                              const float* b,
-                              float* c,
-                              int m,
-                              int n,
-                              int k) {
+__global__ void matmul_kernel_checked(
+    float const *a, float const *b, float *c, int m, int n, int k) {
   __shared__ float tile_a[kBlockSize][kBlockSize];
   __shared__ float tile_b[kBlockSize][kBlockSize];
 
@@ -93,7 +85,7 @@ __global__ void matmul_kernel_checked(const float* a,
   c[row * n + col] = acc;
 }
 
-void check_cuda(cudaError_t error, const char* what) {
+void check_cuda(cudaError_t error, char const *what) {
   if (error == cudaSuccess) {
     return;
   }
@@ -102,7 +94,7 @@ void check_cuda(cudaError_t error, const char* what) {
   std::exit(EXIT_FAILURE);
 }
 
-}  // namespace
+} // namespace
 
 int main() {
   constexpr int m = 64;
@@ -139,9 +131,9 @@ int main() {
     }
   }
 
-  float* d_a = nullptr;
-  float* d_b = nullptr;
-  float* d_c = nullptr;
+  float *d_a = nullptr;
+  float *d_b = nullptr;
+  float *d_c = nullptr;
 
   std::cout << "Allocating device memory...\n";
   check_cuda(cudaMalloc(&d_a, h_a.size() * sizeof(float)), "cudaMalloc(d_a)");
@@ -149,10 +141,14 @@ int main() {
   check_cuda(cudaMalloc(&d_c, h_c.size() * sizeof(float)), "cudaMalloc(d_c)");
 
   std::cout << "Copying data to device...\n";
-  check_cuda(cudaMemcpy(d_a, h_a.data(), h_a.size() * sizeof(float), cudaMemcpyHostToDevice),
-             "cudaMemcpy H2D A");
-  check_cuda(cudaMemcpy(d_b, h_b.data(), h_b.size() * sizeof(float), cudaMemcpyHostToDevice),
-             "cudaMemcpy H2D B");
+  check_cuda(
+      cudaMemcpy(
+          d_a, h_a.data(), h_a.size() * sizeof(float), cudaMemcpyHostToDevice),
+      "cudaMemcpy H2D A");
+  check_cuda(
+      cudaMemcpy(
+          d_b, h_b.data(), h_b.size() * sizeof(float), cudaMemcpyHostToDevice),
+      "cudaMemcpy H2D B");
 
   std::cout << "Launching kernel...\n";
   dim3 block(kBlockSize, kBlockSize);
@@ -161,8 +157,10 @@ int main() {
 
   check_cuda(cudaGetLastError(), "kernel launch");
   check_cuda(cudaDeviceSynchronize(), "cudaDeviceSynchronize");
-  check_cuda(cudaMemcpy(h_c.data(), d_c, h_c.size() * sizeof(float), cudaMemcpyDeviceToHost),
-             "cudaMemcpy D2H C");
+  check_cuda(
+      cudaMemcpy(
+          h_c.data(), d_c, h_c.size() * sizeof(float), cudaMemcpyDeviceToHost),
+      "cudaMemcpy D2H C");
 
   cudaFree(d_a);
   cudaFree(d_b);
