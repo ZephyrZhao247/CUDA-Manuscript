@@ -5,15 +5,27 @@ from torch.utils.cpp_extension import load
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-cutlass_include_path = os.path.join(current_dir, "../third-party/cutlass/include")
+cutlass_home = os.environ.get("CUTLASS_HOME")
+if not cutlass_home:
+    raise RuntimeError("CUTLASS_HOME must be set to the CUTLASS repository root")
+
+cutlass_include_path = os.path.join(cutlass_home, "include")
+if not os.path.isdir(cutlass_include_path):
+    raise RuntimeError(f"CUTLASS include directory not found: {cutlass_include_path}")
+
 sources = [os.path.join(current_dir, filename) for filename in ["minimal_gemm.cu"]]
+build_dir = os.path.join(current_dir, "build")
 
 os.environ["TORCH_CUDA_ARCH_LIST"] = ".".join(map(str, torch.cuda.get_device_capability()))
+os.makedirs(build_dir, exist_ok=True)
+
+print(f"Building CUDA extension in {build_dir}")
 
 # Load CUDA extension module
 lib = load(
     name="minimal_gemm",
     sources=sources,
+    build_directory=build_dir,
     extra_cuda_cflags=[
         "-O3",
         f"-I{cutlass_include_path}",
