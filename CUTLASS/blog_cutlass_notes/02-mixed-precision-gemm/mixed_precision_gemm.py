@@ -24,7 +24,7 @@ print(f"Building CUDA extension in {build_dir}")
 
 # Load CUDA extension module
 lib = load(
-    name="minimal_gemm",
+    name="mixed_precision_gemm",
     sources=sources,
     build_directory=build_dir,
     extra_cuda_cflags=[
