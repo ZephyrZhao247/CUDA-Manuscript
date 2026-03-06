@@ -15,3 +15,9 @@ build
 *.pyd
 
 *.log
+
+.clangd
+
+# agents
+CLAUDE.md
+AGENTS.md
